@@ -2,6 +2,19 @@
 
 An Angular operations dashboard backed by a Java Spring Boot API. It turns the provided request logs into an at-a-glance health report with status, request/failure counts, failure rate, successful-request p95 latency, failure-type breakdown, and an explanation for each classification.
 
+## Submission contents
+
+| Requirement | Where it is addressed |
+| --- | --- |
+| Design, assumptions, thresholds, trade-offs, and next steps | [`SOLUTION_DESIGN.docx`](SOLUTION_DESIGN.docx); editable source: [`SOLUTION_DESIGN.md`](SOLUTION_DESIGN.md) |
+| Working API and health calculations | `src/main/java/com/brightline/health/HealthController.java`, `src/main/java/com/brightline/health/HealthService.java`, and `src/main/java/com/brightline/health/HealthModels.java` |
+| Dashboard and API connection | `frontend/src/app/app.component.ts`, `frontend/src/app/health-api.service.ts`, and `frontend/src/app/health.models.ts` |
+| Seed request data | `starter_kit/data/integration_logs.json` |
+| Automated backend tests | `src/test/java/com/brightline/health/HealthServiceTest.java` (health-policy boundaries) and `HealthControllerTest.java` (HTTP responses and error handling) |
+| Run instructions, test command, policy, and limitations | This README |
+
+The Word document is the submission-ready design document. Keep it at the ZIP's top level; the Markdown file is its editable source.
+
 ## Requirements
 
 - Java JDK 17 or newer
@@ -46,6 +59,12 @@ Run Java service tests from the repository root:
 mvn test
 ```
 
+Build the Angular dashboard from `frontend`:
+
+```powershell
+npm run build
+```
+
 ## Health policy
 
 - The evaluation time is the newest event timestamp in the log file, so historical runs are deterministic. The rolling window includes the cutoff and latest event.
@@ -57,3 +76,9 @@ mvn test
 ## Limitations
 
 This is a batch report, not a continuously refreshed monitor. A production version should ingest events continuously, use UTC-aware timestamps, model expected integrations independently of observed log traffic, account for request volume and customer impact, expose alerting and history, and tune thresholds against service-level objectives and customer baselines. The seed data is synthetic and covers only about an hour, so these defaults are starting assumptions, not validated SLOs.
+
+## Trade-offs and next steps
+
+The deterministic thresholds and worst-status fleet rollup are easy to explain, but are not tuned to production SLOs or business criticality. The five-request minimum makes low-volume uncertainty visible; successful-request-only p95 keeps failures from distorting latency, while failure counts and status breakdowns still expose timeouts. The selected window is based on the newest event in the file, so the seed-data report is reproducible rather than a live view.
+
+With more time and operational data, validate thresholds against incidents and provider-specific SLOs; ingest events continuously; track expected integrations and stale telemetry; and add historical trends, alerting, and customer-impact context. An AI summary could later explain the deterministic metrics, but should not determine health.
